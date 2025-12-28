@@ -1,0 +1,230 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, Send } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import { format } from 'date-fns';
+
+export default function AILearnChat() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    const profile = localStorage.getItem('ailearnProfile');
+    if (profile) {
+      const data = JSON.parse(profile);
+      const welcomeMessage = {
+        id: Date.now(),
+        role: 'assistant',
+        content: `سلام! من دستیار یادگیری آی لرن هستم 🤖\n\nمی‌بینم که شما در ${data.grade} هستید و می‌خواهید ${data.subject} یاد بگیرید. من اینجا هستم تا به شما کمک کنم!\n\nچه سوالی دارید؟`,
+        timestamp: new Date(),
+      };
+      setMessages([welcomeMessage]);
+    }
+  }, []);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
+
+  const handleSendMessage = async (content) => {
+    if (!content.trim() || isLoading) return;
+
+    const userMessage = {
+      id: Date.now(),
+      role: 'user',
+      content: content,
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const profile = JSON.parse(localStorage.getItem('ailearnProfile') || '{}');
+      const contextPrompt = `من یک دستیار آموزشی هستم. دانش‌آموز در پایه ${profile.grade} است و می‌خواهد ${profile.subject} یاد بگیرد. سوال: ${content}`;
+
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: contextPrompt,
+      });
+
+      const aiMessage = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: response,
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: 'متاسفم، یک خطا رخ داد. لطفاً دوباره امتحان کنید.',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleSendMessage(input);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white relative" dir="rtl">
+      <div className="container mx-auto px-4 py-4 max-w-4xl h-screen flex flex-col">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 mb-4 bg-gray-100 rounded-2xl p-3 border border-gray-200"
+        >
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/e998dd7a3_photo_2025-12-27_10-22-05.png"
+            alt="آی لرن"
+            className="w-12 h-12"
+          />
+          <div className="flex-1">
+            <h1 className="text-lg font-bold text-gray-800">
+              آی لرن - دستیار یادگیری
+            </h1>
+            <p className="text-sm text-gray-600">آماده کمک به شماست</p>
+          </div>
+          <Link to={createPageUrl('Chat')}>
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-gray-200 text-gray-800">
+              <ArrowLeft className="w-5 h-5 rotate-180" />
+            </Button>
+          </Link>
+        </motion.div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto mb-4 space-y-4 px-2">
+          <AnimatePresence mode="popLayout">
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {message.role === 'assistant' && (
+                  <img 
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/e998dd7a3_photo_2025-12-27_10-22-05.png"
+                    alt="AI"
+                    className="w-10 h-10 rounded-2xl flex-shrink-0"
+                  />
+                )}
+                
+                <div className={`max-w-[75%] ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
+                  <div
+                    className={`rounded-3xl px-6 py-4 shadow-md ${
+                      message.role === 'user'
+                        ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-gray-900'
+                        : 'bg-gray-100 text-gray-800 border border-gray-200'
+                    }`}
+                  >
+                    {message.role === 'user' ? (
+                      <p className="text-base leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    ) : (
+                      <>
+                        <ReactMarkdown className="prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                          {message.content}
+                        </ReactMarkdown>
+                        {message.image && (
+                          <img src={message.image} alt="Generated" className="mt-3 rounded-2xl max-w-full" />
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1 px-2">
+                    {format(message.timestamp, 'HH:mm')}
+                  </span>
+                </div>
+
+                {message.role === 'user' && (
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                    <span className="text-white text-lg">👤</span>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex gap-3 justify-start"
+            >
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/e998dd7a3_photo_2025-12-27_10-22-05.png"
+                alt="AI"
+                className="w-10 h-10 rounded-2xl flex-shrink-0"
+              />
+              <div className="bg-gray-100 rounded-3xl px-6 py-4 shadow-md border border-gray-200">
+                <div className="flex gap-2 items-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <form onSubmit={handleSubmit} className="relative" dir="rtl">
+          <div className="bg-gray-100 rounded-3xl shadow-xl border border-gray-200 p-3 flex items-end gap-2">
+            <Textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="سوال خود را بپرسید..."
+              className="flex-1 resize-none border-0 focus:ring-0 focus-visible:ring-0 min-h-[56px] max-h-[200px] text-base bg-transparent text-gray-800 placeholder:text-gray-500"
+              rows={1}
+              disabled={isLoading}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!input.trim() || isLoading}
+              className="rounded-2xl w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 disabled:opacity-50 text-gray-900"
+            >
+              <Send className="w-5 h-5" />
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
