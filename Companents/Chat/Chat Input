@@ -1,0 +1,102 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Send, Code, Image as ImageIcon, Search } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const COLOR_GRADIENTS = {
+  green: 'from-green-600 to-emerald-600',
+  blue: 'from-blue-600 to-cyan-600',
+  purple: 'from-purple-600 to-pink-600',
+  orange: 'from-orange-600 to-red-600',
+  pink: 'from-pink-600 to-rose-600',
+};
+
+export default function ChatInput({ onSend, isLoading, chatColor = 'green' }) {
+  const [input, setInput] = useState('');
+  const textareaRef = React.useRef(null);
+  const gradient = COLOR_GRADIENTS[chatColor];
+
+  const handleSubmit = (e, type = null) => {
+    e.preventDefault();
+    if (input.trim() && !isLoading) {
+      onSend(input, { type });
+      setInput('');
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="relative" dir="rtl">
+      <div className="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-3 flex items-end gap-2">
+        <Textarea
+          ref={textareaRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="پیام خود را بنویسید..."
+          className="flex-1 resize-none border-0 focus:ring-0 focus-visible:ring-0 min-h-[56px] max-h-[200px] text-base bg-transparent text-white placeholder:text-gray-400"
+          rows={1}
+          disabled={isLoading}
+        />
+        
+        {/* Advanced Features Menu */}
+        <DropdownMenu dir="rtl">
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              size="icon"
+              disabled={!input.trim() || isLoading}
+              className="rounded-2xl w-12 h-12 bg-white/10 hover:bg-white/20 disabled:opacity-50 border border-white/20"
+            >
+              <Code className="w-5 h-5 text-white" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-gray-900 border-white/20 text-white" align="end">
+            <DropdownMenuItem 
+              onClick={(e) => handleSubmit(e, 'code')}
+              className="cursor-pointer hover:bg-white/10 flex items-center gap-2"
+            >
+              <Code className="w-4 h-4" />
+              کدنویسی
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={(e) => handleSubmit(e, 'image')}
+              className="cursor-pointer hover:bg-white/10 flex items-center gap-2"
+            >
+              <ImageIcon className="w-4 h-4" />
+              ساخت تصویر
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={(e) => handleSubmit(e, 'search')}
+              className="cursor-pointer hover:bg-white/10 flex items-center gap-2"
+            >
+              <Search className="w-4 h-4" />
+              جستجو در اینترنت
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button
+          type="submit"
+          size="icon"
+          disabled={!input.trim() || isLoading}
+          className={`rounded-2xl w-12 h-12 bg-gradient-to-br ${gradient} disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all duration-300 hover:shadow-xl`}
+        >
+          <Send className="w-5 h-5" />
+        </Button>
+      </div>
+    </form>
+  );
+}
