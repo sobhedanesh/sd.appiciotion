@@ -1,0 +1,127 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from "@/components/ui/button";
+import { Sparkles, ArrowRight, MessageCircle, Zap, Shield } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+export default function HeroSection() {
+    return (
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-slate-50 via-white to-violet-50/30">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 overflow-hidden">
+                <motion.div 
+                    className="absolute top-20 left-10 w-72 h-72 bg-violet-200/30 rounded-full blur-3xl"
+                    animate={{ 
+                        x: [0, 50, 0],
+                        y: [0, 30, 0],
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div 
+                    className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl"
+                    animate={{ 
+                        x: [0, -30, 0],
+                        y: [0, -50, 0],
+                    }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div 
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-100/20 rounded-full blur-3xl"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                />
+            </div>
+
+            <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+                {/* Badge */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                >
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-8">
+                        <Sparkles className="w-4 h-4 text-violet-500" />
+                        <span className="text-sm font-medium text-slate-700">Powered by Advanced AI</span>
+                    </div>
+                </motion.div>
+
+                {/* Main Heading */}
+                <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="text-5xl md:text-7xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-6"
+                >
+                    Your Intelligent
+                    <br />
+                    <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+                        AI Assistant
+                    </span>
+                </motion.h1>
+
+                {/* Subtitle */}
+                <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed"
+                >
+                    Experience the future of conversation. Get instant answers, creative ideas, 
+                    and helpful assistance — all in one place.
+                </motion.p>
+
+                {/* CTA Buttons */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
+                >
+                    <Link to={createPageUrl('Chat')}>
+                        <Button size="lg" className="h-14 px-8 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/20 hover:shadow-2xl hover:shadow-slate-900/30 transition-all duration-300 text-base font-medium group">
+                            Start Chatting
+                            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                    </Link>
+                </motion.div>
+
+                {/* Feature Cards */}
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.5 }}
+                    className="grid md:grid-cols-3 gap-6"
+                >
+                    <FeatureCard
+                        icon={MessageCircle}
+                        title="Natural Conversations"
+                        description="Chat naturally like you would with a friend. Our AI understands context and nuance."
+                    />
+                    <FeatureCard
+                        icon={Zap}
+                        title="Instant Responses"
+                        description="Get immediate, thoughtful answers to any question you might have."
+                    />
+                    <FeatureCard
+                        icon={Shield}
+                        title="Private & Secure"
+                        description="Your conversations are protected. We prioritize your privacy above all."
+                    />
+                </motion.div>
+            </div>
+        </section>
+    );
+}
+
+function FeatureCard({ icon: Icon, title, description }) {
+    return (
+        <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Icon className="w-6 h-6 text-violet-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">{title}</h3>
+            <p className="text-slate-600 text-sm leading-relaxed">{description}</p>
+        </div>
+    );
+}
