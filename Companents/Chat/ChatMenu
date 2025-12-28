@@ -1,0 +1,83 @@
+import React from 'react';
+import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Menu, Palette, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+
+const THEMES = [
+  { name: 'سبز', value: 'green', from: 'from-green-600', to: 'to-green-800' },
+  { name: 'آبی', value: 'blue', from: 'from-blue-600', to: 'to-blue-800' },
+  { name: 'بنفش', value: 'purple', from: 'from-purple-600', to: 'to-purple-800' },
+  { name: 'قرمز', value: 'red', from: 'from-red-600', to: 'to-red-800' },
+  { name: 'نارنجی', value: 'orange', from: 'from-orange-600', to: 'to-orange-800' },
+];
+
+export default function ChatMenu({ currentTheme, onThemeChange }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('userProfile');
+    navigate(createPageUrl('Login'));
+  };
+
+  const handleThemeChange = async (theme) => {
+    onThemeChange(theme);
+    
+    // Update in database
+    const profileStr = localStorage.getItem('userProfile');
+    if (profileStr) {
+      const profile = JSON.parse(profileStr);
+      await base44.entities.UserProfile.update(profile.id, { chat_theme: theme });
+      profile.chat_theme = theme;
+      localStorage.setItem('userProfile', JSON.stringify(profile));
+    }
+  };
+
+  return (
+    <DropdownMenu dir="rtl">
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white">
+          <Menu className="w-5 h-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56 bg-black/90 backdrop-blur-md border-white/20 text-white" align="end">
+        <div className="px-2 py-2">
+          <p className="text-sm font-semibold mb-2 flex items-center gap-2">
+            <Palette className="w-4 h-4" />
+            تم رنگی چت
+          </p>
+          {THEMES.map((theme) => (
+            <DropdownMenuItem
+              key={theme.value}
+              onClick={() => handleThemeChange(theme.value)}
+              className="cursor-pointer hover:bg-white/10 focus:bg-white/10"
+            >
+              <div className="flex items-center gap-3 w-full">
+                <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${theme.from} ${theme.to}`} />
+                <span className={currentTheme === theme.value ? 'font-bold' : ''}>{theme.name}</span>
+              </div>
+            </DropdownMenuItem>
+          ))}
+        </div>
+        
+        <DropdownMenuSeparator className="bg-white/20" />
+        
+        <DropdownMenuItem 
+          onClick={handleLogout}
+          className="cursor-pointer hover:bg-white/10 focus:bg-white/10 text-red-400"
+        >
+          <LogOut className="w-4 h-4 ml-2" />
+          خروج از حساب
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
