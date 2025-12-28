@@ -1,0 +1,276 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Code, Image as ImageIcon, Search } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import MessageBubble from '../components/chat/MessageBubble';
+import ChatInput from '../components/chat/ChatInput';
+import TypingIndicator from '../components/chat/TypingIndicator';
+import SettingsMenu from '../components/chat/SettingsMenu';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const COLOR_GRADIENTS = {
+  green: { from: 'from-green-600', to: 'to-emerald-600', shadow: 'shadow-green-500/30' },
+  blue: { from: 'from-blue-600', to: 'to-cyan-600', shadow: 'shadow-blue-500/30' },
+  purple: { from: 'from-purple-600', to: 'to-pink-600', shadow: 'shadow-purple-500/30' },
+  orange: { from: 'from-orange-600', to: 'to-red-600', shadow: 'shadow-orange-500/30' },
+  pink: { from: 'from-pink-600', to: 'to-rose-600', shadow: 'shadow-pink-500/30' },
+};
+
+export default function Chat() {
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [chatColor, setChatColor] = useState('green');
+  const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
+
+  const SUGGESTED_PROMPTS = [
+    "محاسبات کوانتومی را به زبان ساده توضیح بده",
+    "یک شعر درباره فناوری بنویس",
+    "به من کمک کن ایده‌های استارتاپی بدهم",
+    "معنی زندگی چیست؟"
+  ];
+
+  useEffect(() => {
+    // چک کردن لاگین
+    const user = localStorage.getItem('currentUser');
+    if (!user) {
+      navigate(createPageUrl('Auth'));
+    }
+
+    // بارگذاری رنگ ذخیره شده
+    const savedColor = localStorage.getItem('chatColor');
+    if (savedColor) {
+      setChatColor(savedColor);
+    }
+  }, [navigate]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
+
+  const handleColorChange = (color) => {
+    setChatColor(color);
+    localStorage.setItem('chatColor', color);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    navigate(createPageUrl('Auth'));
+  };
+
+  const handleSendMessage = async (content, options = {}) => {
+    if (!content.trim() || isLoading) return;
+
+    const userMessage = {
+      id: Date.now(),
+      role: 'user',
+      content: options.type === 'image' ? `🎨 درخواست تصویر: ${content}` : 
+               options.type === 'code' ? `💻 درخواست کدنویسی: ${content}` :
+               options.type === 'search' ? `🔍 جستجو: ${content}` : content,
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      if (options.type === 'image') {
+        // ساخت تصویر
+        const result = await base44.integrations.Core.GenerateImage({
+          prompt: content,
+        });
+
+        const aiMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: 'تصویر با موفقیت ساخته شد!',
+          image: result.url,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else if (options.type === 'search') {
+        // سرچ در اینترنت
+        const response = await base44.integrations.Core.InvokeLLM({
+          prompt: content,
+          add_context_from_internet: true,
+        });
+
+        const aiMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: response,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else if (options.type === 'code') {
+        // کدنویسی
+        const codePrompt = `شما یک برنامه‌نویس حرفه‌ای هستید. ${content}. کد را با توضیحات کامل و به صورت استاندارد بنویسید.`;
+        const response = await base44.integrations.Core.InvokeLLM({
+          prompt: codePrompt,
+        });
+
+        const aiMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: response,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        // پیام عادی
+        const response = await base44.integrations.Core.InvokeLLM({
+          prompt: content,
+        });
+
+        const aiMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: response,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      }
+    } catch (error) {
+      const errorMessage = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: 'متاسفم، یک خطا رخ داد. لطفاً دوباره امتحان کنید.',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const colorGradient = COLOR_GRADIENTS[chatColor];
+
+  return (
+    <div className="min-h-screen relative overflow-hidden" dir="rtl">
+      <div className="container mx-auto px-4 py-6 max-w-4xl h-screen flex flex-col relative z-10">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 mb-4 bg-white/5 backdrop-blur-md rounded-2xl p-3 border border-white/10"
+        >
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/734e9964a_image2.png"
+            alt="لوگو"
+            className="w-10 h-10"
+          />
+          <div className="flex-1">
+            <h1 className="text-lg font-bold text-white">
+              دستیار هوشمند
+            </h1>
+            <p className="text-xs text-white/60">همیشه در خدمت شما</p>
+          </div>
+          <Link to={createPageUrl('AILearn')}>
+            <Button size="sm" className="bg-gradient-to-l from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-gray-900 rounded-xl flex items-center gap-2 font-bold">
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/e998dd7a3_photo_2025-12-27_10-22-05.png"
+                alt="آی لرن"
+                className="w-6 h-6"
+              />
+              آی لرن
+            </Button>
+          </Link>
+          <SettingsMenu 
+            chatColor={chatColor}
+            onColorChange={handleColorChange}
+            onLogout={handleLogout}
+          />
+          <Link to={createPageUrl('Home')}>
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white h-9 w-9">
+              <ArrowLeft className="w-4 h-4 rotate-180" />
+            </Button>
+          </Link>
+        </motion.div>
+
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto mb-6 space-y-4 px-2">
+          {messages.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center h-full text-center"
+            >
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/734e9964a_image2.png"
+                alt="لوگو"
+                className="w-32 h-32 mx-auto mb-6"
+              />
+              <h2 className="text-3xl font-bold text-white mb-3">
+                چطور می‌تونم کمکتون کنم؟
+              </h2>
+              <p className="text-gray-300 text-lg max-w-md mb-8">
+                هر سوالی که دارید بپرسید - من اینجا هستم تا با اطلاعات، ایده‌ها و گفتگو کمکتون کنم.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl px-4">
+                {SUGGESTED_PROMPTS.map((prompt, index) => (
+                  <motion.button
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    onClick={() => handleSendMessage(prompt)}
+                    className="p-4 text-right bg-white/5 border border-white/10 rounded-2xl hover:border-green-500/50 hover:bg-white/10 hover:shadow-lg hover:shadow-green-500/20 transition-all duration-200 group"
+                  >
+                    <p className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                      {prompt}
+                    </p>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          <AnimatePresence mode="popLayout">
+            {messages.map((message, index) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <MessageBubble message={message} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <TypingIndicator />
+            </motion.div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area with Advanced Features */}
+        <ChatInput 
+          onSend={handleSendMessage} 
+          isLoading={isLoading} 
+          chatColor={chatColor}
+        />
+      </div>
+    </div>
+  );
+}
