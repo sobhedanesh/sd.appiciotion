@@ -1,0 +1,55 @@
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Settings, Palette } from 'lucide-react';
+
+const CHAT_COLORS = [
+  { name: 'سبز', value: 'green', gradient: 'from-green-600 to-emerald-600' },
+  { name: 'آبی', value: 'blue', gradient: 'from-blue-600 to-cyan-600' },
+  { name: 'بنفش', value: 'purple', gradient: 'from-purple-600 to-pink-600' },
+  { name: 'نارنجی', value: 'orange', gradient: 'from-orange-600 to-red-600' },
+  { name: 'صورتی', value: 'pink', gradient: 'from-pink-600 to-rose-600' },
+];
+
+export default function SettingsMenu({ chatColor, onColorChange, onLogout }) {
+  return (
+    <DropdownMenu dir="rtl">
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white">
+          <Settings className="w-5 h-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-64 bg-gray-900 border-white/20 text-white" align="end">
+        <div className="p-3 border-b border-white/10">
+          <div className="flex items-center gap-2 mb-3">
+            <Palette className="w-4 h-4 text-green-400" />
+            <span className="font-semibold">رنگ چت</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {CHAT_COLORS.map((color) => (
+              <button
+                key={color.value}
+                onClick={() => onColorChange(color.value)}
+                className={`h-10 rounded-lg bg-gradient-to-br ${color.gradient} hover:scale-105 transition-transform ${
+                  chatColor === color.value ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''
+                }`}
+                title={color.name}
+              />
+            ))}
+          </div>
+        </div>
+        <DropdownMenuItem 
+          onClick={onLogout}
+          className="text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer"
+        >
+          خروج از حساب
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
