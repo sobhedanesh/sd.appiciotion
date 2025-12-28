@@ -1,0 +1,125 @@
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+
+export default function Auth() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        // ورود - فقط چک می‌کنیم ایمیل وجود داره
+        const users = await base44.entities.User.filter({ email });
+        if (users && users.length > 0) {
+          // ذخیره در localStorage
+          localStorage.setItem('currentUser', JSON.stringify(users[0]));
+          navigate(createPageUrl('Home'));
+        } else {
+          alert('کاربری با این ایمیل یافت نشد. لطفاً ثبت‌نام کنید.');
+        }
+      } else {
+        // ثبت‌نام
+        const existingUsers = await base44.entities.User.filter({ email });
+        if (existingUsers && existingUsers.length > 0) {
+          alert('این ایمیل قبلاً ثبت شده است.');
+        } else {
+          const newUser = await base44.auth.updateMe({ 
+            username,
+            email
+          });
+          localStorage.setItem('currentUser', JSON.stringify(newUser));
+          navigate(createPageUrl('Home'));
+        }
+      }
+    } catch (error) {
+      alert('خطایی رخ داد. لطفاً دوباره تلاش کنید.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/b35747b4d_00.png"
+            alt="لوگو"
+            className="w-32 h-32 mx-auto mb-6"
+          />
+          <h1 className="text-4xl font-bold text-white mb-2">
+            {isLogin ? 'خوش آمدید' : 'ثبت‌نام'}
+          </h1>
+          <p className="text-gray-300">
+            {isLogin ? 'برای ورود ایمیل خود را وارد کنید' : 'برای شروع ثبت‌نام کنید'}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20" dir="rtl">
+          <div className="space-y-6">
+            {!isLogin && (
+              <div>
+                <Label htmlFor="username" className="text-white text-right block mb-2">
+                  نام کاربری
+                </Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required={!isLogin}
+                  className="bg-white/10 border-white/30 text-white placeholder:text-gray-400 text-right"
+                  placeholder="نام کاربری خود را وارد کنید"
+                />
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="email" className="text-white text-right block mb-2">
+                ایمیل
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="bg-white/10 border-white/30 text-white placeholder:text-gray-400 text-right"
+                placeholder="ایمیل خود را وارد کنید"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-l from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-6 text-lg rounded-2xl"
+            >
+              {isLoading ? 'در حال پردازش...' : isLogin ? 'ورود' : 'ثبت‌نام'}
+            </Button>
+          </div>
+
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-green-400 hover:text-green-300 transition-colors"
+            >
+              {isLogin ? 'حساب کاربری ندارید؟ ثبت‌نام کنید' : 'قبلاً ثبت‌نام کرده‌اید؟ وارد شوید'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
