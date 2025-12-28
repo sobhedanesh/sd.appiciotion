@@ -1,0 +1,105 @@
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { MessageCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+export default function Home() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // چک کردن لاگین
+    const user = localStorage.getItem('currentUser');
+    if (!user) {
+      navigate(createPageUrl('Auth'));
+    }
+  }, [navigate]);
+
+  return (
+    <div className="min-h-screen relative overflow-hidden" dir="rtl">
+      {/* Hero Section */}
+      <div className="container mx-auto px-6 py-20 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center max-w-4xl mx-auto"
+        >
+          {/* Logo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/734e9964a_image2.png"
+              alt="هوش مصنوعی"
+              className="w-56 h-56 mx-auto drop-shadow-2xl"
+            />
+          </motion.div>
+
+          {/* Main Heading */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-l from-green-400 to-emerald-400 bg-clip-text text-transparent leading-tight"
+          >
+            دستیار هوشمند
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-xl md:text-2xl text-white mb-12 leading-relaxed"
+          >
+            با قدرت هوش مصنوعی پیشرفته، آماده پاسخگویی به تمام سوالات شما
+          </motion.p>
+
+          {/* Features Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 max-w-3xl mx-auto"
+          >
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="text-3xl mb-2">💬</div>
+              <p className="text-sm text-white font-medium">گفتگوی طبیعی</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="text-3xl mb-2">💻</div>
+              <p className="text-sm text-white font-medium">کدنویسی</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="text-3xl mb-2">🎨</div>
+              <p className="text-sm text-white font-medium">ساخت تصویر</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="text-3xl mb-2">🔍</div>
+              <p className="text-sm text-white font-medium">جستجوی آنلاین</p>
+            </div>
+          </motion.div>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          >
+            <Link to={createPageUrl('Chat')}>
+              <Button size="lg" className="bg-gradient-to-l from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-10 py-7 text-xl rounded-2xl shadow-lg shadow-green-500/40 hover:shadow-xl hover:shadow-green-500/60 transition-all duration-300">
+                <MessageCircle className="w-6 h-6 ml-2" />
+                شروع گفتگو
+              </Button>
+            </Link>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
