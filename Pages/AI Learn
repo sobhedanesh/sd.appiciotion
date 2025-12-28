@@ -1,0 +1,208 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { motion } from 'framer-motion';
+import { BookOpen, FileText, BarChart3, Users, Award } from 'lucide-react';
+
+export default function AILearn() {
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    grade: '',
+    school: '',
+    role: '',
+    subject: ''
+  });
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    localStorage.setItem('ailearnProfile', JSON.stringify(formData));
+    navigate(createPageUrl('AILearnChat'));
+  };
+
+  const features = [
+    { icon: BookOpen, text: 'تدریس تعاملی و شخصی‌سازی‌شده برای هر دانش‌آموز' },
+    { icon: FileText, text: 'ساخت آزمون و تمرین با سوالات متنوع' },
+    { icon: BarChart3, text: 'ارزیابی پیشرفت و نمایش نمودارهای آموزشی' },
+    { icon: Users, text: 'پشتیبانی از معلمان، والدین و دانش‌آموزان' },
+    { icon: Award, text: 'گواهینامه و جوایز برای پیشرفت تحصیلی' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-white relative" dir="rtl">
+      <div className="container mx-auto px-6 py-12 max-w-4xl">
+        {!showForm ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
+          >
+            {/* Robot Image */}
+            <motion.img
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/e998dd7a3_photo_2025-12-27_10-22-05.png"
+              alt="آی لرن ربات"
+              className="w-64 h-64 mx-auto mb-8 drop-shadow-2xl"
+            />
+
+            {/* Title */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-5xl font-bold text-gray-800 mb-4"
+            >
+              آی لرن
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-2xl text-gray-600 mb-12"
+            >
+              یادگیری درس در کمترین زمان
+            </motion.p>
+
+            {/* Features Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="bg-gradient-to-br from-yellow-50 to-amber-50 border-4 border-yellow-400 rounded-3xl p-8 mb-12 shadow-2xl"
+            >
+              <div className="space-y-4">
+                {features.map((feature, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 + index * 0.1 }}
+                    className="flex items-center gap-4 text-right"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center flex-shrink-0">
+                      <feature.icon className="w-6 h-6 text-yellow-900" />
+                    </div>
+                    <p className="text-lg text-gray-700 font-medium">{feature.text}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* CTA Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1 }}
+            >
+              <Button
+                onClick={() => setShowForm(true)}
+                size="lg"
+                className="bg-gradient-to-l from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-gray-900 px-12 py-7 text-2xl rounded-2xl shadow-xl font-bold"
+              >
+                شروع یادگیری با آی لرن
+              </Button>
+            </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto"
+          >
+            {/* Robot Image in Form */}
+            <img
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694fb9afa39a0f46a1245ab9/e998dd7a3_photo_2025-12-27_10-22-05.png"
+              alt="آی لرن ربات"
+              className="w-48 h-48 mx-auto mb-8"
+            />
+
+            <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
+              اطلاعات تحصیلی خود را وارد کنید
+            </h2>
+
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white border-2 border-gray-200 rounded-3xl p-8 shadow-lg">
+              {/* Grade */}
+              <div>
+                <Label htmlFor="grade" className="text-gray-800 text-right block mb-2 text-lg">
+                  کدام پایه تحصیلی هستی؟
+                </Label>
+                <Input
+                  id="grade"
+                  type="text"
+                  value={formData.grade}
+                  onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+                  required
+                  placeholder="مثال: پایه نهم"
+                  className="text-gray-800 border-gray-300 text-right text-lg"
+                />
+              </div>
+
+              {/* School */}
+              <div>
+                <Label htmlFor="school" className="text-gray-800 text-right block mb-2 text-lg">
+                  نام مدرسه خود را بنویس
+                </Label>
+                <Input
+                  id="school"
+                  type="text"
+                  value={formData.school}
+                  onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                  required
+                  placeholder="نام مدرسه"
+                  className="text-gray-800 border-gray-300 text-right text-lg"
+                />
+              </div>
+
+              {/* Role */}
+              <div>
+                <Label htmlFor="role" className="text-gray-800 text-right block mb-2 text-lg">
+                  نقش شما
+                </Label>
+                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                  <SelectTrigger className="text-gray-800 border-gray-300 text-right text-lg">
+                    <SelectValue placeholder="انتخاب کنید" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student">دانش آموز</SelectItem>
+                    <SelectItem value="teacher">معلم/مدیر</SelectItem>
+                    <SelectItem value="deputy">معاون</SelectItem>
+                    <SelectItem value="parent">والدین</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Subject */}
+              <div>
+                <Label htmlFor="subject" className="text-gray-800 text-right block mb-2 text-lg">
+                  چه درسی رو میخوای یاد بگیری؟
+                </Label>
+                <Input
+                  id="subject"
+                  type="text"
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  required
+                  placeholder="مثال: ریاضی، علوم، انگلیسی..."
+                  className="text-gray-800 border-gray-300 text-right text-lg"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-l from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-gray-900 py-6 text-xl rounded-2xl font-bold"
+              >
+                شروع یادگیری
+              </Button>
+            </form>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+}
